@@ -1,7 +1,6 @@
 package net.dsdstudio.umk;
 
 import org.apache.http.client.fluent.Request;
-import org.apache.http.client.fluent.Response;
 import org.apache.http.message.BasicNameValuePair;
 import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
@@ -19,33 +18,6 @@ import java.util.stream.Collectors;
  * @since : 2015. 1. 9..
  */
 public class Main {
-    public static void slr(String id, String pwd) {
-        try {
-            Response r = Request.Post("https://www.slrclub.com/login/process.php")
-                    .bodyForm(
-                            new BasicNameValuePair("user_id", id),
-                            new BasicNameValuePair("password", pwd)
-                    )
-                    .addHeader("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36")
-                    .execute();
-            // TODO 성공여부 처리
-            byte[] b = Request.Get("http://www.slrclub.com/bbs/zboard.php?id=used_market&category=1")
-                    .addHeader("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36")
-                    .execute().returnContent().asBytes();
-            List<SlrBoardData> list = Jsoup.parse(new String(b)).select("#bbs_list tbody tr").stream()
-                    .map(tr -> tr.select("td"))
-                    .filter(td -> td.select(".list_notice").isEmpty() && Optional.of(td.select(".list_num").html()).isPresent())
-                    .map(SlrBoardData::fromElements)
-                    .collect(Collectors.toList());
-
-            Integer maxBbsId = list.stream().map(data -> data.id)
-                    .max(Integer::max)
-                    .get();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     static class SlrBoardData {
         public Integer id;
@@ -105,6 +77,34 @@ public class Main {
         }
     }
 
+    public static void slr(String id, String pwd) {
+        try {
+            Request.Post("https://www.slrclub.com/login/process.php")
+                    .bodyForm(
+                            new BasicNameValuePair("user_id", id),
+                            new BasicNameValuePair("password", pwd)
+                    )
+                    .userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36")
+                    .execute();
+            // TODO 성공여부 처리
+            byte[] b = Request.Get("http://www.slrclub.com/bbs/zboard.php?id=used_market&category=1")
+                    .userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36")
+                    .execute().returnContent().asBytes();
+            List<SlrBoardData> list = Jsoup.parse(new String(b)).select("#bbs_list tbody tr").stream()
+                    .map(tr -> tr.select("td"))
+                    .filter(td -> td.select(".list_notice").isEmpty() && Optional.of(td.select(".list_num").html()).isPresent())
+                    .map(SlrBoardData::fromElements)
+                    .collect(Collectors.toList());
+
+            Integer maxBbsId = list.stream().map(data -> data.id)
+                    .max(Integer::max)
+                    .get();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void clien(String $id, String $pwd) {
         try {
             Request.Post("https://www.clien.net/cs2/bbs/login_check.php")
@@ -130,8 +130,8 @@ public class Main {
             throw new RuntimeException(e);
         }
     }
-
-    public static void main(String[] args) {
     
+    public static void main(String[] args) {
+
     }
 }
