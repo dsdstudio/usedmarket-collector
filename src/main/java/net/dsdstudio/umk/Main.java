@@ -1,14 +1,20 @@
 package net.dsdstudio.umk;
 
-import org.apache.http.client.ClientProtocolException;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.message.BasicNameValuePair;
 import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -23,9 +29,19 @@ public class Main {
     public static final String UserAgentStr = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36";
 
     /**
+     * 유틸성 함수들 모음
+     */
+    static class Util {
+        public static void log(String $s) {
+            System.out.println($s);
+        }
+    }
+
+    /**
      * BoardData Model
      */
     static class BoardData {
+        public BoardDataFactory.BoardType dataType;
         public Integer id;
         public String subject;
         public String detailUrl;
@@ -35,7 +51,8 @@ public class Main {
         @Override
         public String toString() {
             return "BoardData{" +
-                    "id=" + id +
+                    "dataType=" + dataType +
+                    ", id=" + id +
                     ", subject='" + subject + '\'' +
                     ", detailUrl='" + detailUrl + '\'' +
                     ", ownerName='" + ownerName + '\'' +
@@ -60,6 +77,7 @@ public class Main {
                 o.subject = $tds.select(".sbj").select("a").text();
                 o.ownerName = $tds.select(".list_name").select("span").text();
                 o.date = $tds.select(".list_date").text();
+                o.dataType = BoardType.SLR;
                 return o;
             } else if ($boardType == BoardType.CLIEN) {
                 BoardData o = new BoardData();
@@ -68,6 +86,7 @@ public class Main {
                 o.subject = $tds.select(".post_subject").text();
                 o.ownerName = $tds.select(".post_name").select("a").attr("title");
                 o.date = $tds.get(4).select("span").attr("title");
+                o.dataType = BoardType.CLIEN;
                 return o;
             } else {
                 throw new IllegalArgumentException("잘못된 인자입니다. ");
@@ -109,13 +128,14 @@ public class Main {
         @Override
         public void login() {
             try {
-                Request.Post(loginUrl)
+                HttpResponse response = Request.Post(loginUrl)
                         .bodyForm(
                                 new BasicNameValuePair(paramId, id),
                                 new BasicNameValuePair(paramPwd, pwd)
                         )
                         .userAgent(UserAgentStr)
-                        .execute();
+                        .execute().returnResponse();
+                Util.log(response.getStatusLine() + " slrclub login succeed.");
                 this.isLogin = true;
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -129,22 +149,20 @@ public class Main {
 
         @Override
         public Stream<BoardData> boardData() {
-            String response = null;
             try {
-                response = new String(Request.Get(bbsUrl)
+                String response = new String(Request.Get(bbsUrl)
                         .userAgent(UserAgentStr)
                         .execute().returnContent().asBytes(), "UTF-8");
+                return Jsoup.parse(response)
+                        .select("#bbs_list tbody tr").stream()
+                        .map(tr -> tr.select("td"))
+                        .filter(td -> td.select(".list_notice").isEmpty() && Optional.of(td.select(".list_num").html()).isPresent())
+                        .map(tds -> BoardDataFactory.getInstance(BoardDataFactory.BoardType.SLR, tds));
             } catch (IOException e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
-            return Jsoup.parse(response)
-                    .select("#bbs_list tbody tr").stream()
-                    .map(tr -> tr.select("td"))
-                    .filter(td -> td.select(".list_notice").isEmpty() && Optional.of(td.select(".list_num").html()).isPresent())
-                    .map(tds -> BoardDataFactory.getInstance(BoardDataFactory.BoardType.SLR, tds));
         }
     }
-
 
     static class ClienBoardDataGrabber implements Grabber {
         private final String id;
@@ -164,13 +182,15 @@ public class Main {
         @Override
         public void login() {
             try {
-                Request.Post(loginUrl)
+                HttpResponse response = Request.Post(loginUrl)
                         .bodyForm(
                                 new BasicNameValuePair(paramId, id),
                                 new BasicNameValuePair(paramPwd, pwd)
                         )
                         .userAgent(UserAgentStr)
-                        .execute();
+                        .execute().returnResponse();
+
+                Util.log(response.getStatusLine() + " clien login succeed.");
                 this.isLogin = true;
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -184,7 +204,6 @@ public class Main {
 
         @Override
         public Stream<BoardData> boardData() {
-
             try {
                 String response = new String(Request.Get(this.bbsUrl)
                         .userAgent(UserAgentStr)
@@ -199,21 +218,39 @@ public class Main {
         }
     }
 
-    public static void slr(String $id, String $pwd) {
-        SlrBoardDataGrabber grabber = new SlrBoardDataGrabber($id, $pwd);
-
-        grabber.login();
-        grabber.boardData().forEach(System.out::println);
-
-    }
-
-    public static void clien(String $id, String $pwd) {
-        ClienBoardDataGrabber grabber = new ClienBoardDataGrabber($id, $pwd);
-
-        grabber.login();
-        grabber.boardData().forEach(System.out::println);
-    }
+    static ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
+    static final int periodSeconds = 10;
 
     public static void main(String[] args) {
+        SlrBoardDataGrabber slrGrabber = new SlrBoardDataGrabber("your_id", "your_pwd");
+        ClienBoardDataGrabber clienGrabber = new ClienBoardDataGrabber("your_id", "your_pwd");
+        clienGrabber.login();
+        slrGrabber.login();
+
+        service.scheduleAtFixedRate(() -> {
+            List<BoardData> clienList = clienGrabber.boardData().collect(Collectors.toList());
+            List<BoardData> slrList = slrGrabber.boardData().collect(Collectors.toList());
+
+            OptionalInt slrMaxBoardId = slrList.stream().mapToInt(o -> o.id).reduce(Integer::max);
+            OptionalInt clienMaxBoardId = clienList.stream().mapToInt(o -> o.id).reduce(Integer::max);
+            Util.log("clien max boardId : " + clienMaxBoardId.getAsInt());
+            Util.log("slrclub max boardId : " + slrMaxBoardId.getAsInt());
+            Util.log(clienList + " " + slrList);
+            Util.log(LocalDateTime.now().format(DateTimeFormatter.ofPattern("MM-dd HH:mm:ss.SSS")) + " executed");
+        }, 0, periodSeconds, TimeUnit.SECONDS);
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                Util.log("Shutdown Hook started..");
+                service.shutdownNow();
+                try {
+                    service.awaitTermination(0, TimeUnit.MILLISECONDS);
+                    Util.log("Shutdown completed..");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 }
