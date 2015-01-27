@@ -1,21 +1,23 @@
-package net.dsdstudio.umk.services;
+package net.dsdstudio.usedmarket.services;
 
 /**
- * usedmarket-collector net.dsdstudio.umk.services
+ * usedmarket-collector net.dsdstudio.usedmarket.services
  *
  * @author : bhkim
  * @since : 2015-01-22 오후 10:40
  */
 
-import net.dsdstudio.umk.BoardData;
-import net.dsdstudio.umk.utils.Util;
+import net.dsdstudio.usedmarket.BoardData;
+import net.dsdstudio.usedmarket.utils.Util;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.message.BasicNameValuePair;
 import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -25,7 +27,9 @@ import java.util.stream.Stream;
  */
 @Service
 public class SlrBoardDataGrabService implements GrabService {
+    @Value("${slrclub.id}")
     private String id;
+    @Value("${slrclub.pwd}")
     private String pwd;
 
     private final String loginUrl = "https://www.slrclub.com/login/process.php";
@@ -37,17 +41,13 @@ public class SlrBoardDataGrabService implements GrabService {
     @Autowired
     private BoardDataProvider provider;
 
-
-    public SlrBoardDataGrabService(String $id, String $pwd) {
-        this.id = $id;
-        this.pwd = $pwd;
-    }
-
     public SlrBoardDataGrabService() {
     }
 
     @Override
+    @PostConstruct
     public void login() {
+        System.out.println("SLRCLUB LOGIN => " + this.id);
         try {
             HttpResponse response = Request.Post(loginUrl)
                     .bodyForm(

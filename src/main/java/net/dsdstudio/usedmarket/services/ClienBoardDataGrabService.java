@@ -1,12 +1,13 @@
-package net.dsdstudio.umk.services;
+package net.dsdstudio.usedmarket.services;
 
-import net.dsdstudio.umk.BoardData;
-import net.dsdstudio.umk.utils.Util;
+import net.dsdstudio.usedmarket.BoardData;
+import net.dsdstudio.usedmarket.utils.Util;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.message.BasicNameValuePair;
 import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -14,15 +15,16 @@ import java.io.IOException;
 import java.util.stream.Stream;
 
 /**
- * usedmarket-collector net.dsdstudio.umk.services
+ * usedmarket-collector net.dsdstudio.usedmarket.services
  *
  * @author : bhkim
  * @since : 2015-01-22 오후 10:38
  */
-
 @Service
 public class ClienBoardDataGrabService implements GrabService {
+    @Value("${clien.id}")
     private String id;
+    @Value("${clien.pwd")
     private String pwd;
 
     private final String loginUrl = "https://www.clien.net/cs2/bbs/login_check.php";
@@ -34,17 +36,13 @@ public class ClienBoardDataGrabService implements GrabService {
     @Autowired
     private BoardDataProvider provider;
 
-    public ClienBoardDataGrabService(String $id, String $pwd) {
-        this.id = $id;
-        this.pwd = $pwd;
-    }
-
     public ClienBoardDataGrabService() {
     }
 
     @Override
     @PostConstruct
     public void login() {
+        System.out.println("CLIEN LOGIN => " + this.id);
         try {
             HttpResponse response = Request.Post(loginUrl)
                     .bodyForm(

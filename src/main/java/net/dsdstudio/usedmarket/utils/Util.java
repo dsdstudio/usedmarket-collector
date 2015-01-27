@@ -1,4 +1,4 @@
-package net.dsdstudio.umk.utils;
+package net.dsdstudio.usedmarket.utils;
 
 /**
  * 유틸성 함수들 모음

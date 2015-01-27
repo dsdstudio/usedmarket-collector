@@ -1,13 +1,13 @@
-package net.dsdstudio.umk.services;
+package net.dsdstudio.usedmarket.services;
 
 /**
- * usedmarket-collector net.dsdstudio.umk.services
+ * usedmarket-collector net.dsdstudio.usedmarket.services
  *
  * @author : bhkim
  * @since : 2015-01-22 오후 10:40
  */
 
-import net.dsdstudio.umk.BoardData;
+import net.dsdstudio.usedmarket.BoardData;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 

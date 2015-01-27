@@ -1,6 +1,6 @@
-package net.dsdstudio.umk;
+package net.dsdstudio.usedmarket;
 
-import net.dsdstudio.umk.services.BoardDataProvider;
+import net.dsdstudio.usedmarket.services.BoardDataProvider;
 
 /**
  * BoardData Model

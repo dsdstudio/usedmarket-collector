@@ -1,6 +1,6 @@
-package net.dsdstudio.umk.services;
+package net.dsdstudio.usedmarket.services;
 
-import net.dsdstudio.umk.BoardData;
+import net.dsdstudio.usedmarket.BoardData;
 
 import java.util.stream.Stream;
 
