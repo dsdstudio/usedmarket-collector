@@ -5,6 +5,10 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 /**
  * usedmarket-collector net.dsdstudio.usedmarket.services
  *
@@ -12,7 +16,7 @@ import org.springframework.stereotype.Service;
  * @since : 2015-01-27 20:30
  */
 @Service
-public class MessageService {
+public class KeywordNotificationService {
     @Autowired
     private SimpMessagingTemplate template;
 
@@ -22,9 +26,14 @@ public class MessageService {
     @Autowired
     private SlrBoardDataGrabService slrBoardDataGrabService;
 
+    List<String> list = new CopyOnWriteArrayList<>();
+
+    // user.keywords = [a,b,c]
+    // (keyword, [user,user1]... )
+
     @Scheduled(fixedRate = 5000)
     public void crawling() {
         this.clienBoardDataGrabService.boardData().forEach(System.out::println);
-        //this.slrBoardDataGrabService.boardData().forEach(System.out::println);
+        // this.slrBoardDataGrabService.boardData().forEach(System.out::println);
     }
 }
