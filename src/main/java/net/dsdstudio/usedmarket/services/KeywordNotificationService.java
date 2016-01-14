@@ -1,13 +1,12 @@
 package net.dsdstudio.usedmarket.services;
 
+import net.dsdstudio.usedmarket.BoardData;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 /**
  * usedmarket-collector net.dsdstudio.usedmarket.services
@@ -18,22 +17,28 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Service
 public class KeywordNotificationService {
     @Autowired
-    private SimpMessagingTemplate template;
-
-    @Autowired
     private ClienBoardDataGrabService clienBoardDataGrabService;
 
     @Autowired
     private SlrBoardDataGrabService slrBoardDataGrabService;
 
-    List<String> list = new CopyOnWriteArrayList<>();
+    private Integer maxSlrclubBoardId = 0;
+    private Integer maxClienBoardId = 0;
 
-    // user.keywords = [a,b,c]
-    // (keyword, [user,user1]... )
-
-    @Scheduled(fixedRate = 5000)
-    public void crawling() {
+    @Scheduled(fixedRate = 30 * 1000)
+    public void sendKeywordNotification() {
         this.clienBoardDataGrabService.boardData().forEach(System.out::println);
-        // this.slrBoardDataGrabService.boardData().forEach(System.out::println);
+        List<BoardData> list = this.slrBoardDataGrabService.boardData()
+                .filter(b -> b.id > this.maxSlrclubBoardId)
+                .collect(Collectors.toList());
+        if (list.isEmpty()) return;
+
+        list.stream().forEach(System.out::println);
+        Integer maxId = list.stream().map(board -> board.id).reduce(Integer::max).get();
+        if (maxId == this.maxSlrclubBoardId) return;
+
+        this.maxSlrclubBoardId = maxId;
+
+        System.out.println(this.maxSlrclubBoardId);
     }
 }
