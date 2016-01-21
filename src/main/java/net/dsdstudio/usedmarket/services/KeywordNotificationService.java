@@ -22,23 +22,44 @@ public class KeywordNotificationService {
     @Autowired
     private SlrBoardDataGrabService slrBoardDataGrabService;
 
+    @Autowired
+    private SlackNotifier slackNotifier;
+
     private Integer maxSlrclubBoardId = 0;
     private Integer maxClienBoardId = 0;
 
-    @Scheduled(fixedRate = 30 * 1000)
-    public void sendKeywordNotification() {
-        this.clienBoardDataGrabService.boardData().forEach(System.out::println);
-        List<BoardData> list = this.slrBoardDataGrabService.boardData()
+
+    public void monitoring(String keyword) {
+        List<BoardData> list = clienBoardDataGrabService.boardData()
+                .filter(b -> b.id > this.maxClienBoardId)
+                .collect(Collectors.toList());
+        if (list.isEmpty()) return;
+
+        list.stream().filter(b -> b.subject.contains(keyword))
+                .forEach(b -> slackNotifier.notifyMessage(SlackNotifier.CHANNEL_NOTIFY, "[" + b.date + "] " + b.subject + "\nhttp://www.clien.net" + b.detailUrl));
+
+        Integer maxClienBoardId = list.stream().map(board -> board.id).reduce(Integer::max).get();
+        this.maxClienBoardId = maxClienBoardId;
+    }
+
+    public void slrMonitoring(String keyword) {
+        List<BoardData> list = slrBoardDataGrabService.boardData()
                 .filter(b -> b.id > this.maxSlrclubBoardId)
                 .collect(Collectors.toList());
         if (list.isEmpty()) return;
 
-        list.stream().forEach(System.out::println);
-        Integer maxId = list.stream().map(board -> board.id).reduce(Integer::max).get();
-        if (maxId == this.maxSlrclubBoardId) return;
+        list.stream().filter(b -> b.subject.contains(keyword))
+                .forEach(b -> slackNotifier.notifyMessage(SlackNotifier.CHANNEL_NOTIFY, "[" + b.date + "] " + b.subject + "\nhttp://www.slrclub.com" + b.detailUrl));
 
-        this.maxSlrclubBoardId = maxId;
-
-        System.out.println(this.maxSlrclubBoardId);
+        Integer maxSlrclubBoardId = list.stream().map(board -> board.id).reduce(Integer::max).get();
+        this.maxSlrclubBoardId = maxSlrclubBoardId;
     }
+
+    @Scheduled(fixedRate = 30 * 1000)
+    public void sendKeywordNotification() {
+        String keyword = "a7";
+        monitoring(keyword);
+        slrMonitoring(keyword);
+    }
+
 }

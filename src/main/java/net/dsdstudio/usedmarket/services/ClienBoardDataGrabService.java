@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 public class ClienBoardDataGrabService implements GrabService {
     @Value("${clien.id}")
     private String id;
-    @Value("${clien.pwd")
+    @Value("${clien.pwd}")
     private String pwd;
 
     private final String loginUrl = "https://www.clien.net/cs2/bbs/login_check.php";
