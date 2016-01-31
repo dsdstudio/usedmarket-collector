@@ -1,6 +1,8 @@
 package net.dsdstudio.usedmarket.services;
 
 import net.dsdstudio.usedmarket.BoardData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,8 @@ import java.util.stream.Collectors;
  */
 @Service
 public class KeywordNotificationService {
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
     @Autowired
     private ClienBoardDataGrabService clienBoardDataGrabService;
 
@@ -38,8 +42,8 @@ public class KeywordNotificationService {
         list.stream().filter(b -> b.subject.contains(keyword))
                 .forEach(b -> slackNotifier.notifyMessage(SlackNotifier.CHANNEL_NOTIFY, "[" + b.date + "] " + b.subject + "\nhttp://www.clien.net" + b.detailUrl));
 
-        Integer maxClienBoardId = list.stream().map(board -> board.id).reduce(Integer::max).get();
-        this.maxClienBoardId = maxClienBoardId;
+        this.maxClienBoardId = list.stream().map(board -> board.id).reduce(Integer::max).get();
+        logger.debug(list.stream().findFirst().get().toString());
     }
 
     public void slrMonitoring(String keyword) {
@@ -48,11 +52,12 @@ public class KeywordNotificationService {
                 .collect(Collectors.toList());
         if (list.isEmpty()) return;
 
+        list.stream().forEach(System.out::println);
         list.stream().filter(b -> b.subject.contains(keyword))
                 .forEach(b -> slackNotifier.notifyMessage(SlackNotifier.CHANNEL_NOTIFY, "[" + b.date + "] " + b.subject + "\nhttp://www.slrclub.com" + b.detailUrl));
 
-        Integer maxSlrclubBoardId = list.stream().map(board -> board.id).reduce(Integer::max).get();
-        this.maxSlrclubBoardId = maxSlrclubBoardId;
+        this.maxSlrclubBoardId = list.stream().map(board -> board.id).reduce(Integer::max).get();
+        logger.debug(list.stream().findFirst().get().toString());
     }
 
     @Scheduled(fixedRate = 30 * 1000)
@@ -60,6 +65,6 @@ public class KeywordNotificationService {
         String keyword = "a7";
         monitoring(keyword);
         slrMonitoring(keyword);
+        logger.debug("monitoring keyword => " + keyword);
     }
-
 }
