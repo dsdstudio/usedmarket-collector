@@ -25,8 +25,7 @@ public class SlackNotifier {
 
     public final static String CHANNEL_NOTIFY = "#bhkim_notify";
 
-    public SlackNotifier() {
-    }
+    public SlackNotifier() {}
 
     @PostConstruct
     public void init() {

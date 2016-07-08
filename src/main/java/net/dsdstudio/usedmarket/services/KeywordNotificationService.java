@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,27 +34,27 @@ public class KeywordNotificationService {
     private Integer maxClienBoardId = 0;
 
 
-    public void monitoring(String keyword) {
+    public void monitoring(List<String> keywords) {
         List<BoardData> list = clienBoardDataGrabService.boardData()
                 .filter(b -> b.id > this.maxClienBoardId)
                 .collect(Collectors.toList());
         if (list.isEmpty()) return;
 
-        list.stream().filter(b -> b.subject.contains(keyword))
+        list.stream().filter(b -> keywords.stream().anyMatch(keyword -> b.subject.contains(keyword)))
                 .forEach(b -> slackNotifier.notifyMessage(SlackNotifier.CHANNEL_NOTIFY, "[" + b.date + "] " + b.subject + "\nhttp://www.clien.net" + b.detailUrl));
 
         this.maxClienBoardId = list.stream().map(board -> board.id).reduce(Integer::max).get();
         logger.debug(list.stream().findFirst().get().toString());
     }
 
-    public void slrMonitoring(String keyword) {
+    public void slrMonitoring(List<String> keywords) {
         List<BoardData> list = slrBoardDataGrabService.boardData()
                 .filter(b -> b.id > this.maxSlrclubBoardId)
                 .collect(Collectors.toList());
         if (list.isEmpty()) return;
 
         list.stream().forEach(System.out::println);
-        list.stream().filter(b -> b.subject.contains(keyword))
+        list.stream().filter(b -> keywords.stream().anyMatch(keyword -> b.subject.contains(keyword)))
                 .forEach(b -> slackNotifier.notifyMessage(SlackNotifier.CHANNEL_NOTIFY, "[" + b.date + "] " + b.subject + "\nhttp://www.slrclub.com" + b.detailUrl));
 
         this.maxSlrclubBoardId = list.stream().map(board -> board.id).reduce(Integer::max).get();
@@ -62,9 +63,9 @@ public class KeywordNotificationService {
 
     @Scheduled(fixedRate = 30 * 1000)
     public void sendKeywordNotification() {
-        String keyword = "a7";
-        monitoring(keyword);
-        slrMonitoring(keyword);
-        logger.debug("monitoring keyword => " + keyword);
+        List<String> keywords = Arrays.asList("28", "55.8");
+        monitoring(keywords);
+        slrMonitoring(keywords);
+        logger.debug("monitoring keyword => " + keywords.stream().collect(Collectors.joining(",")));
     }
 }
