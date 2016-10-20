@@ -24,4 +24,8 @@ public class BoardData {
                 ", date='" + date + '\'' +
                 '}';
     }
+
+    public String getDetailUrl() {
+        return detailUrl;
+    }
 }

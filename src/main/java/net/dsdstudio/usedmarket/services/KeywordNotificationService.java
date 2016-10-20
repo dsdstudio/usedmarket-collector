@@ -26,46 +26,39 @@ public class KeywordNotificationService {
 
     @Autowired
     private SlrBoardDataGrabService slrBoardDataGrabService;
+    @Autowired
+    private TwoCpuDataGrabService twoCpuDataGrabService;
 
     @Autowired
     private SlackNotifier slackNotifier;
 
-    private Integer maxSlrclubBoardId = 0;
-    private Integer maxClienBoardId = 0;
+    class Notifier {
+        Integer counter = 0;
+        GrabService service;
 
+        public Notifier(GrabService service) {
+            this.service = service;
+        }
 
-    public void monitoring(List<String> keywords) {
-        List<BoardData> list = clienBoardDataGrabService.boardData()
-                .filter(b -> b.id > this.maxClienBoardId)
-                .collect(Collectors.toList());
-        if (list.isEmpty()) return;
+        public void monitoring(List<String> keywords) {
+            List<BoardData> list = service.boardData()
+                    .filter(b -> b.id > this.counter)
+                    .collect(Collectors.toList());
+            if (list.isEmpty()) return;
 
-        list.stream().filter(b -> keywords.stream().anyMatch(keyword -> b.subject.contains(keyword)))
-                .forEach(b -> slackNotifier.notifyMessage(SlackNotifier.CHANNEL_NOTIFY, "[" + b.date + "] " + b.subject + "\nhttp://www.clien.net" + b.detailUrl));
+            list.stream().filter(b -> keywords.stream().anyMatch(keyword -> b.subject.contains(keyword)))
+                    .forEach(b -> slackNotifier.notifyMessage(SlackNotifier.CHANNEL_NOTIFY, b.dataType + " [" + b.date + "] " + b.subject + "\n" + b.getDetailUrl()));
 
-        this.maxClienBoardId = list.stream().map(board -> board.id).reduce(Integer::max).get();
-        logger.debug(list.stream().findFirst().get().toString());
-    }
-
-    public void slrMonitoring(List<String> keywords) {
-        List<BoardData> list = slrBoardDataGrabService.boardData()
-                .filter(b -> b.id > this.maxSlrclubBoardId)
-                .collect(Collectors.toList());
-        if (list.isEmpty()) return;
-
-        list.stream().forEach(System.out::println);
-        list.stream().filter(b -> keywords.stream().anyMatch(keyword -> b.subject.contains(keyword)))
-                .forEach(b -> slackNotifier.notifyMessage(SlackNotifier.CHANNEL_NOTIFY, "[" + b.date + "] " + b.subject + "\nhttp://www.slrclub.com" + b.detailUrl));
-
-        this.maxSlrclubBoardId = list.stream().map(board -> board.id).reduce(Integer::max).get();
-        logger.debug(list.stream().findFirst().get().toString());
+            this.counter = list.stream().map(board -> board.id).reduce(Integer::max).get();
+            logger.debug(list.stream().findFirst().get().toString());
+        }
     }
 
     @Scheduled(fixedRate = 30 * 1000)
     public void sendKeywordNotification() {
-        List<String> keywords = Arrays.asList("28", "55.8");
-        monitoring(keywords);
-        slrMonitoring(keywords);
+        List<String> keywords = Arrays.asList("420", "440");
+        Notifier notifier = new Notifier(twoCpuDataGrabService);
+        notifier.monitoring(keywords);
         logger.debug("monitoring keyword => " + keywords.stream().collect(Collectors.joining(",")));
     }
 }
