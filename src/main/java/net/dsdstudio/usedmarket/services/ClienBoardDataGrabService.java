@@ -60,7 +60,7 @@ public class ClienBoardDataGrabService implements GrabService {
     }
 
     @Override
-    public Boolean isLogined() {
+    public Boolean authorized() {
         return this.isLogin;
     }
 

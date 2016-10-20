@@ -21,7 +21,7 @@ import java.util.function.Function;
 @Service
 public class BoardDataProvider {
     public enum BoardType {
-        SLR, CLIEN
+        SLR, TWOCPU, CLIEN
     }
 
     private static final Map<BoardType, Function<Elements, BoardData>> commandMap = new HashMap<>();
@@ -45,6 +45,17 @@ public class BoardDataProvider {
             o.ownerName = $tds.select(".list_name").select("span").text();
             o.date = $tds.select(".list_date").text();
             o.dataType = BoardType.SLR;
+            return o;
+        });
+        commandMap.put(BoardType.TWOCPU, $tds -> {
+            BoardData o = new BoardData();
+            o.id = Integer.valueOf($tds.get(0).select("span").text());
+            o.detailUrl = $tds.get(1).select("a").attr("href");
+            o.detailUrl = o.detailUrl.substring(2, o.detailUrl.length());
+            o.subject = $tds.get(1).select("a span").text();
+            o.ownerName = $tds.get(2).select("a").text();
+            o.date = $tds.get(3).text();
+            o.dataType = BoardType.TWOCPU;
             return o;
         });
     }

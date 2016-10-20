@@ -1,12 +1,5 @@
 package net.dsdstudio.usedmarket.services;
 
-/**
- * usedmarket-collector net.dsdstudio.usedmarket.services
- *
- * @author : bhkim
- * @since : 2015-01-22 오후 10:40
- */
-
 import net.dsdstudio.usedmarket.BoardData;
 import net.dsdstudio.usedmarket.utils.Util;
 import org.apache.http.HttpResponse;
@@ -19,35 +12,31 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
- * Slrclub boarddata 수집용 구현체
+ * Created by bhkim on 2016. 10. 21..
  */
 @Service
-public class SlrBoardDataGrabService implements GrabService {
-    @Value("${slrclub.id}")
+public class TwoCpuDataGrabService implements GrabService {
+    @Value("${2cpu.id}")
     private String id;
-    @Value("${slrclub.pwd}")
+    @Value("${2cpu.pwd}")
     private String pwd;
 
-    private final String loginUrl = "https://www.slrclub.com/login/process.php";
-    private final String bbsUrl = "http://www.slrclub.com/bbs/zboard.php?id=used_market&category=1";
-    private final String paramId = "user_id";
-    private final String paramPwd = "password";
-
+    private final String loginUrl = "http://2cpu.co.kr/bbs/login_check.php";
+    private final String bbsUrl = "http://2cpu.co.kr/sell?bo_table=sell&sca=&sfl=wr_subject&stx=";
+    private final String paramId = "mb_id";
+    private final String paramPwd = "mb_password";
     private Boolean isLogin = false;
+
     @Autowired
     private BoardDataProvider provider;
-
-    public SlrBoardDataGrabService() {
-    }
 
     @Override
     @PostConstruct
     public void login() {
-        System.out.println("SLRCLUB LOGIN => " + this.id);
+        System.out.println("2cpu LOGIN => " + this.id);
         try {
             HttpResponse response = Request.Post(loginUrl)
                     .bodyForm(
@@ -56,11 +45,12 @@ public class SlrBoardDataGrabService implements GrabService {
                     )
                     .userAgent(UserAgentStr)
                     .execute().returnResponse();
-            Util.log(response.getStatusLine() + " slrclub login succeed.");
+            Util.log(response.getStatusLine() + " 2cpu login succeed.");
             this.isLogin = true;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
     }
 
     @Override
@@ -71,14 +61,14 @@ public class SlrBoardDataGrabService implements GrabService {
     @Override
     public Stream<BoardData> boardData() {
         try {
-            String response = new String(Request.Get(bbsUrl)
+            String response = new String(Request.Get(this.bbsUrl)
                     .userAgent(UserAgentStr)
-                    .execute().returnContent().asBytes(), "UTF-8");
-            return Jsoup.parse(response)
-                    .select("#bbs_list tbody tr").stream()
+                    .execute().returnContent().asBytes(), "EUC_KR");
+
+            return Jsoup.parse(response).select("#list_sell tbody tr").stream()
+                    .filter(tr-> !(tr.hasClass("is_notice") || tr.hasClass("visible-xs")))
                     .map(tr -> tr.select("td"))
-                    .filter(td -> td.select(".list_notice").isEmpty() && Optional.of(td.select(".list_num").html()).isPresent())
-                    .map(tds -> this.provider.getInstance(BoardDataProvider.BoardType.SLR, tds));
+                    .map(tds -> this.provider.getInstance(BoardDataProvider.BoardType.TWOCPU, tds));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
