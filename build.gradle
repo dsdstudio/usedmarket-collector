@@ -30,7 +30,6 @@ dependencies {
     compile 'org.jsoup:jsoup:1.7.2'
     compile('org.springframework.boot:spring-boot-devtools')
     compile("org.springframework.boot:spring-boot-starter")
-    compile("org.springframework.boot:spring-boot-starter-redis")
     testCompile("org.springframework.boot:spring-boot-starter-test")
 }
 
