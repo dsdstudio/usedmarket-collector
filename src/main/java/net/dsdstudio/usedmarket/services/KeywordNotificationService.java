@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,9 +33,17 @@ public class KeywordNotificationService {
     @Autowired
     private SlackNotifier slackNotifier;
 
+    private Notifier notifier;
+
+    @PostConstruct
+    public void setUp() {
+        notifier = new Notifier(this.twoCpuDataGrabService);
+    }
+
+
     class Notifier {
-        Integer counter = 0;
-        GrabService service;
+        private Integer counter = 0;
+        private GrabService service;
 
         public Notifier(GrabService service) {
             this.service = service;
@@ -56,9 +65,8 @@ public class KeywordNotificationService {
 
     @Scheduled(fixedRate = 30 * 1000)
     public void sendKeywordNotification() {
-        List<String> keywords = Arrays.asList("420", "440");
-        Notifier notifier = new Notifier(twoCpuDataGrabService);
-        notifier.monitoring(keywords);
+        List<String> keywords = Arrays.asList("쿼드로", "nvidia", "Quadro", "quadro", "Nvidia");
+        this.notifier.monitoring(keywords);
         logger.debug("monitoring keyword => " + keywords.stream().collect(Collectors.joining(",")));
     }
 }
