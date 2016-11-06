@@ -23,12 +23,12 @@ public class KeywordNotificationService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Autowired
-    private ClienBoardDataGrabService clienBoardDataGrabService;
+    private GrabService clienBoardDataGrabService;
 
     @Autowired
-    private SlrBoardDataGrabService slrBoardDataGrabService;
+    private GrabService slrBoardDataGrabService;
     @Autowired
-    private TwoCpuDataGrabService twoCpuDataGrabService;
+    private GrabService twoCpuDataGrabService;
 
     @Autowired
     private SlackNotifier slackNotifier;
@@ -65,7 +65,7 @@ public class KeywordNotificationService {
 
     @Scheduled(fixedRate = 30 * 1000)
     public void sendKeywordNotification() {
-        List<String> keywords = Arrays.asList("쿼드로", "nvidia", "Quadro", "quadro", "Nvidia");
+        List<String> keywords = Arrays.asList("DDR", "ddr", "램", "렘", "TB", "tb", "SATA");
         this.notifier.monitoring(keywords);
         logger.debug("monitoring keyword => " + keywords.stream().collect(Collectors.joining(",")));
     }
