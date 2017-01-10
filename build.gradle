@@ -1,6 +1,6 @@
 buildscript {
 	ext {
-		springBootVersion = '1.4.2.RELEASE'
+		springBootVersion = '1.4.3.RELEASE'
 	}
     repositories {
         maven { url 'https://repo.spring.io/libs-release' }
@@ -28,9 +28,11 @@ repositories {
 dependencies {
     compile 'org.apache.httpcomponents:fluent-hc:4.3.6'
     compile 'org.jsoup:jsoup:1.7.2'
-    compile('org.springframework.boot:spring-boot-devtools')
-    compile("org.springframework.boot:spring-boot-starter")
-    testCompile("org.springframework.boot:spring-boot-starter-test")
+    compile 'org.springframework.boot:spring-boot-starter'
+    compile 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    testCompile 'org.springframework.boot:spring-boot-starter-test'
+    provided 'org.springframework.boot:spring-boot-devtools'
 }
 
 task wrapper(type: Wrapper) {
