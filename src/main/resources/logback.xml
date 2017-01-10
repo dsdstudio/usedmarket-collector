@@ -9,19 +9,6 @@
             </Pattern>
         </layout>
     </appender>
-
-    <!-- scheduler file appender-->
-    <appender name="FILE-LOGGER" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>/Users/bhkim/usedmarket.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>/Users/bhkim/usedmarket.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
-            <maxHistory>90</maxHistory>
-        </rollingPolicy>
-        <encoder>
-            <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
-        </encoder>
-    </appender>
-
     <root level="debug">
         <appender-ref ref="STDOUT"/>
     </root>
