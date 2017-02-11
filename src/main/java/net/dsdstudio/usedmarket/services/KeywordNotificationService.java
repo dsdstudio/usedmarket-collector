@@ -40,7 +40,6 @@ public class KeywordNotificationService {
         notifier = new Notifier(this.twoCpuDataGrabService);
     }
 
-
     class Notifier {
         private Integer counter = 0;
         private GrabService service;
@@ -51,21 +50,25 @@ public class KeywordNotificationService {
 
         public void monitoring(List<String> keywords) {
             List<BoardData> list = service.boardData()
-                    .filter(b -> b.id > this.counter)
+                    .filter(b -> b.id > counter)
                     .collect(Collectors.toList());
             if (list.isEmpty()) return;
 
-            list.stream().filter(b -> keywords.stream().anyMatch(keyword -> b.subject.contains(keyword)))
-                    .forEach(b -> slackNotifier.notifyMessage(SlackNotifier.CHANNEL_NOTIFY, b.dataType + " [" + b.date + "] " + b.subject + "\n" + b.getDetailUrl()));
+            list.stream()
+                    .filter(b -> keywords.stream().anyMatch(keyword -> b.subject.contains(keyword)))
+                    .map(SlackNotifier.Message::new)
+                    .forEach(slackNotifier::notifyMessage);
 
-            this.counter = list.stream().map(board -> board.id).reduce(Integer::max).get();
+            this.counter = list.stream()
+                    .map(BoardData::getId)
+                    .reduce(Integer::max).get();
             logger.debug(list.stream().findFirst().get().toString());
         }
     }
 
     @Scheduled(fixedRate = 30 * 1000)
     public void sendKeywordNotification() {
-        List<String> keywords = Arrays.asList("DDR", "ddr", "램", "렘", "TB", "tb", "SATA");
+        List<String> keywords = Arrays.asList("DDR", "ddr", "램", "TB", "tb", "SATA", "HDD", "ECC", "ecc");
         this.notifier.monitoring(keywords);
         logger.debug("monitoring keyword => " + keywords.stream().collect(Collectors.joining(",")));
     }

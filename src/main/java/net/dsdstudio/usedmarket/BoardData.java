@@ -13,6 +13,10 @@ public class BoardData {
     public String ownerName;
     public String date;
 
+    public Integer getId() {
+        return id;
+    }
+
     @Override
     public String toString() {
         return "BoardData{" +

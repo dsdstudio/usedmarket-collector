@@ -1,5 +1,6 @@
 package net.dsdstudio.usedmarket.services;
 
+import net.dsdstudio.usedmarket.BoardData;
 import org.apache.http.client.fluent.Async;
 import org.apache.http.client.fluent.Request;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,18 +23,12 @@ public class SlackNotifier {
 
     public final static String CHANNEL_NOTIFY = "#bhkim_notify";
 
-    public SlackNotifier() {}
+    public SlackNotifier() {
+    }
 
     @PostConstruct
     public void init() {
         System.out.println("slack token => " + this.token);
-    }
-
-    public void notifyMessage(String channel, String msg) {
-        System.out.println("notifying message => " + channel);
-        Async.newInstance().execute(
-                Request.Get(baseUrl + "?token=" + token + "&channel=" + encodeUrl(channel) + "&pretty=1&text=" + encodeUrl(msg))
-        );
     }
 
     private String encodeUrl(String s) {
@@ -43,4 +38,38 @@ public class SlackNotifier {
             throw new RuntimeException(e);
         }
     }
+
+    public void notifyMessage(Message msg) {
+        System.out.println("notifying message => " + msg.getChannel());
+        Async.newInstance().execute(
+                Request.Get(baseUrl + "?token=" + token + "&channel=" + encodeUrl(msg.getChannel()) + "&pretty=1&text=" + encodeUrl(msg.getMsg()))
+        );
+    }
+
+    public static class Message {
+        private String channel;
+        private String msg;
+
+        public String getChannel() {
+            return channel;
+        }
+
+        public void setChannel(String channel) {
+            this.channel = channel;
+        }
+
+        public String getMsg() {
+            return msg;
+        }
+
+        public void setMsg(String msg) {
+            this.msg = msg;
+        }
+
+        public Message(BoardData b) {
+            channel = SlackNotifier.CHANNEL_NOTIFY;
+            msg = b.dataType + " [" + b.date + "] " + b.subject + "\n" + b.getDetailUrl();
+        }
+    }
+
 }
