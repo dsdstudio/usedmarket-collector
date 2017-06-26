@@ -1,6 +1,5 @@
 package net.dsdstudio.usedmarket.services;
 
-import net.dsdstudio.usedmarket.BoardData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,12 +49,12 @@ public class KeywordNotificationService {
 
         public void monitoring(List<String> keywords) {
             List<BoardData> list = service.boardData()
-                    .filter(b -> b.id > counter)
+                    .filter(b -> b.getId() > counter)
                     .collect(Collectors.toList());
             if (list.isEmpty()) return;
 
             list.stream()
-                    .filter(b -> keywords.stream().anyMatch(keyword -> b.subject.contains(keyword)))
+                    .filter(b -> keywords.stream().anyMatch(keyword -> b.getSubject().contains(keyword)))
                     .map(SlackNotifier.Message::new)
                     .forEach(slackNotifier::notifyMessage);
 

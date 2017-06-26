@@ -1,6 +1,5 @@
 package net.dsdstudio.usedmarket.services;
 
-import net.dsdstudio.usedmarket.BoardData;
 import net.dsdstudio.usedmarket.utils.Util;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;

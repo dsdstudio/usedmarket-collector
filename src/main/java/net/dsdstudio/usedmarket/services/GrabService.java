@@ -1,7 +1,5 @@
 package net.dsdstudio.usedmarket.services;
 
-import net.dsdstudio.usedmarket.BoardData;
-
 import java.util.stream.Stream;
 
 /**

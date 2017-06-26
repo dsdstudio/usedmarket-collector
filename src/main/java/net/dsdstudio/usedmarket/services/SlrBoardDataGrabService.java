@@ -7,7 +7,6 @@ package net.dsdstudio.usedmarket.services;
  * @since : 2015-01-22 오후 10:40
  */
 
-import net.dsdstudio.usedmarket.BoardData;
 import net.dsdstudio.usedmarket.utils.Util;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;

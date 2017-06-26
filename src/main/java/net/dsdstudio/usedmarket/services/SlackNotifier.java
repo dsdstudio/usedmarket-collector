@@ -1,6 +1,5 @@
 package net.dsdstudio.usedmarket.services;
 
-import net.dsdstudio.usedmarket.BoardData;
 import org.apache.http.client.fluent.Async;
 import org.apache.http.client.fluent.Request;
 import org.springframework.beans.factory.annotation.Value;
@@ -68,7 +67,7 @@ public class SlackNotifier {
 
         public Message(BoardData b) {
             channel = SlackNotifier.CHANNEL_NOTIFY;
-            msg = b.dataType + " [" + b.date + "] " + b.subject + "\n" + b.getDetailUrl();
+            msg = b.getMessage();
         }
     }
 
