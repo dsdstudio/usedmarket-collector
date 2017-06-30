@@ -7,8 +7,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -32,11 +34,15 @@ public class KeywordNotificationService {
     @Autowired
     private SlackNotifier slackNotifier;
 
-    private Notifier notifier;
+    private ConcurrentHashMap<String, List<String>> m = new ConcurrentHashMap<>();
+    private List<Notifier> notifiers;
 
     @PostConstruct
     public void setUp() {
-        notifier = new Notifier(this.twoCpuDataGrabService);
+        notifiers = new ArrayList<>();
+        notifiers.add(new Notifier(this.twoCpuDataGrabService));
+        notifiers.add(new Notifier(this.slrBoardDataGrabService));
+        notifiers.add(new Notifier(this.clienBoardDataGrabService));
     }
 
     class Notifier {
@@ -68,7 +74,7 @@ public class KeywordNotificationService {
     @Scheduled(fixedRate = 30 * 1000)
     public void sendKeywordNotification() {
         List<String> keywords = Arrays.asList("DDR", "ddr", "램", "TB", "tb", "SATA", "HDD", "ECC", "ecc");
-        this.notifier.monitoring(keywords);
+        for (Notifier n : this.notifiers) n.monitoring(keywords);
         logger.debug("monitoring keyword => " + keywords.stream().collect(Collectors.joining(",")));
     }
 }
